@@ -32,7 +32,7 @@
     "iron-pages": "PolymerElements/iron-pages",
     "paper-tabs": "PolymerElements/paper-tabs",
     "paper-button": "PolymerElements/paper-button",
-    "paper-date-picker": "paper-date-picker#^0.1.5",
+    "polymer-paper-datepicker": "polymer-paper-datepicker#^1.0.3",
     "paper-time-picker": "paper-time-picker#^1.0",
     "moment": "moment#^2.9.0"
   },
