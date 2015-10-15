@@ -9,11 +9,11 @@ Just what it says.
 
 ## Thanks
 Thanks goes to Ben Davis 
-([bendavis78](https://github.com/bendavis78/) 
+([bendavis78](https://github.com/bendavis78/))
 for the excellent
-([paper-date-picker](https://github.com/bendavis78/paper-date-picker) 
+[paper-date-picker](https://github.com/bendavis78/paper-date-picker) 
 and
-([paper-time-picker](https://github.com/bendavis78/paper-time-picker) 
+[paper-time-picker](https://github.com/bendavis78/paper-time-picker) 
 which this dialog wraps.
 
 
