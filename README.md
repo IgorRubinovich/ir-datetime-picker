@@ -2,6 +2,11 @@
 
 **A Material design datetime display/picker dialog for Polymer 1.0**
 
+## Features
+- Select either date, time or both
+- Use moment.js locales
+- Responsive
+
 ## What it does
 Just what it says.
 

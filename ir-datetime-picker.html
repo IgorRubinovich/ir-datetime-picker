@@ -237,13 +237,16 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 		
 		viewUpdate : function() {
-			var d = this.date/1000;
-			this.set("_date", moment.unix(d).locale(this.locale).format(this.formatDate));
-			this.set("_time", moment.unix(d).locale(this.locale).format(this.formatTime));
+			var d = moment.unix(this.date/1000).locale(this.locale);
+
+			this.set("_date", d.format(this.formatDate));
+			this.set("_time", d.format(this.formatTime));
 		},
 		
 		previewUpdate : function() {
-			var d = moment.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60);
+			var d = moment	
+						.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
+						.locale(this.locale);
 
 			this.set("_previewDate", d.format(this.formatDate));
 			this.set("_previewTime", d.format(this.formatTime));
