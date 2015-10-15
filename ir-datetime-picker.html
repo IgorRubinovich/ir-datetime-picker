@@ -1,0 +1,263 @@
+<!--
+@license
+Copyright (c) 2015 Igor Rubinovich <igor.rubinovich@gmail.com>. All rights reserved.
+This code may only be used under the MIT license found at http://opensource.org/licenses/MIT
+-->
+<!--
+# ir-datetime-picker
+# Tagging-style multiselect box for Polymer 1.0
+-->
+
+<dom-module id="ir-datetime-picker">
+  <script src="../moment/min/moment-with-locales.min.js"></script>
+  <link rel="import" href="../paper-time-picker/paper-time-picker.html">
+  <link rel="import" href="../paper-date-picker/paper-date-picker.html">
+  <link rel="import" href="../paper-date-picker/paper-tabs.html">
+  <link rel="import" href="../paper-date-picker/paper-button.html">
+  <link rel="import" href="../paper-date-picker/iron-pages.html">
+  <style>
+    :host {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      h1.paper-font-display1 {
+        font-size: 24px;
+      }
+    } 
+	
+	paper-dialog-scrollable paper-button, #non-prompt-opener {
+	}
+	
+	#non-prompt-opener {
+		border : 1px solid #ddd;
+	}
+	
+	paper-dialog-scrollable {
+		display : flex;
+		flex-wrap : wrap;
+	}
+	
+	
+	
+  </style>
+  <template>
+    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" on-tap="open" target-page="date">{{ _date }}</paper-button>
+    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
+    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}">
+		<div>
+			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
+				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
+				<paper-tab hidden$="{{ onlyDate }}" target-page="time">{{ _previewTime }}</paper-tab>
+			</iron-tabs>
+		</div>
+		<iron-pages on-tap="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
+			<paper-date-picker hidden$="timeOnly" 
+				id="datepicker" 
+				page="date" 
+				responsive-width="{{ responsiveWidth }}" 
+				prompt-dialog-source
+				min-year="{{minYear}}" 
+				max-year="{{maxYear}}" 
+				years="{{years}}"
+				min-date="{{minDate}}" 
+				max-date="{{maxDate}}"
+				on-date-changed="previewUpdate"
+				hidden$="{{ onlyTime }}"
+				>
+			</paper-date-picker>
+			<paper-time-picker 
+				id="timepicker" 
+				class="paper-time-picker-dialog" 
+				page="time" 
+				responsive-width="{{ responsiveWidth }}" 
+				hidden$="{{ onlyDate }}"
+				></paper-time-picker>
+			</paper-time-picker>
+		</iron-pages>
+	  <div class="buttons">
+		<paper-button dialog-dismiss on-tap="cancel">Cancel</paper-button>
+		<paper-button dialog-confirm on-tap="promptUpdate">OK</paper-button>
+	  </div>
+	</paper-dialog>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'ir-datetime-picker',
+
+        properties: {
+		  /* paper-date-picker properties */
+          minYear : { type : Number },
+          maxYear : { type : Number },
+          years : { type : Number },
+          minDate : { type : Number },
+          maxDate : { type : Number },
+
+		  /* paper-date-picker and paper-time-picker layout width */
+          responsiveWidth : { type : Number },
+		  
+		  promptMode : {
+			type : Boolean,
+			value : false,
+			notify : true
+		  },
+		  
+		  title : {
+			type : String,
+			value : "",
+			notify : true
+		  },
+
+		  date : {
+			type : Date,
+			value : new Date(),
+			notify : true
+		  },
+		  
+		  unixTime : {
+			type : Number,
+			value : null,
+			notify : true,
+			observer : "_unixTimeChanged"
+		  },
+		  
+		  formatDate : {
+			type : String,
+			value : "ll"
+		  },
+		  
+		  formatTime : {
+			type : String,
+			value : "LT"
+		  },
+		  
+		  onlyDate : {
+			type : Boolean,
+			value : false
+		  },
+		  
+		  onlyTime : {
+			type : Boolean,
+			value : false
+		  },
+		  
+		  readOnly : {
+			type : Boolean,
+			value : false
+		  },
+		  
+		  /* momentjs locale */
+		  locale : {
+			type : String,
+			value : "en"
+		  },
+		  
+		  _date : { type : Number, value : "pick date" },
+		  _hour : { type : Number, value : "pick time"  },
+		  _minute :  { type : Number }
+        },
+		
+		observers : [
+			"_onlyChanged(onlyDate,onlyTime,readOnly)"
+		],
+		
+		_onlyChanged : function() {
+			if(this.onlyDate && this.onlyTime)
+				throw new Error("only-date and only-time can't be true simultaneously");				
+		},
+		
+		open : function(ev)
+		{
+			var targetPage, pureDate = moment(this.date).hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
+
+			this.set("date", pureDate, this.$.datepicker);
+			
+			this.set("minute", this.date.getMinutes(), this.$.timepicker);
+			this.set("hour", this.date.getHours(), this.$.timepicker);
+
+			targetPage = ev.currentTarget.getAttribute("target-page");
+			
+			if(this.onlyTime) targetPage = "time";
+			if(this.onlyDate) targetPage = "date";
+			
+			this.set("selectedPage", targetPage);
+			
+			this.previewUpdate()
+			
+			this.$.dialog.open();
+
+			this.refitDialog();
+		},
+
+		refitDialog : function() {
+			this.async(function() {
+				this.$.dialog.refit();
+				this.$.dialog.constrain();
+				this.$.dialog.center();
+			});
+		},
+
+		prompt : function(callback)
+		{
+			if(!this.promptMode)
+				throw new Error("must be in prompt mode to use .prompt");
+
+			this.promptCallback = callback;
+			this.open()
+		},
+		
+		close : function()
+		{
+			this.promptUpdate();
+			this.$.dialog.close();
+		},
+
+		cancel : function(ev)
+		{
+			this.value = this.prevValue;
+		},
+
+		promptUpdate : function()
+		{
+			this.unixTime = Number(moment(this.$.datepicker.headingDate).format("x")) + this.$.timepicker.hour * 60 * 60 * 1000 + this.$.timepicker.minute * 60 * 1000;
+			this.date = new Date(this.unixTime);
+			
+			this.fire("change");
+			
+			this.viewUpdate();
+			
+			if(this.promptMode)
+			{
+				this.promptCallback(this.value);
+				delete this.promptCallback;
+				this.inPromptMode = false;
+			}
+		},
+		
+		viewUpdate : function() {
+			var d = this.date/1000;
+			this.set("_date", moment.unix(d).locale(this.locale).format(this.formatDate));
+			this.set("_time", moment.unix(d).locale(this.locale).format(this.formatTime));
+		},
+		
+		previewUpdate : function() {
+			var d = moment.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60);
+
+			this.set("_previewDate", d.format(this.formatDate));
+			this.set("_previewTime", d.format(this.formatTime));
+		},
+		
+		attached : function() {
+			this.viewUpdate(); 
+		},
+		
+		_unixTimeChanged : function() {
+			this.date = new Date(this.unixTime - 3600000);
+		}
+      });	  
+    })();
+  </script>
+
+</dom-module>
