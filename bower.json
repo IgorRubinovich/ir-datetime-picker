@@ -7,8 +7,11 @@
   ],
   "description": "A datetime display/picker for Polymer 1.0",
   "keywords": [
-    "textarea",
-    "contenteditable",
+    "date-picker",
+    "time-picker",
+    "datetime",
+    "date",
+    "time",
     "web-component",
     "web-components",
     "polymer",
@@ -24,15 +27,24 @@
     "tests"
   ],
   "dependencies": {
-    "webcomponentsjs": "~0.7.7",
-    "polymer": "~1.0.8",
+    "polymer": "^1.0.0",
+    "paper-dialog": "PolymerElements/paper-dialog#^1.0.2",
+    "iron-pages": "PolymerElements/iron-pages",
+    "paper-tabs": "PolymerElements/paper-tabs",
     "paper-button": "PolymerElements/paper-button",
-    "paper-dialog": "PolymerElements/paper-dialog",
-    "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable",
-    "ir-clone-to-native-behavior" : "git@github.com:IgorRubinovich/ir-reflect-to-native-behavior.git"
+    "paper-date-picker": "paper-date-picker#^0.1.5",
+    "paper-time-picker": "paper-time-picker#^1.0",
+    "moment": "moment#^2.9.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#~1.0.5",
     "web-component-tester": "*"
+  },
+  "resolutions": {
+    "polymer": "^1.1.0",
+    "font-roboto": "^1.0.1",
+    "paper-ripple": "^1.0.0",
+    "paper-button": "^1.0.0",
+    "paper-dialog": "^1.0.2"
   }
 }
