@@ -11,8 +11,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 <dom-module id="ir-datetime-picker">
   <link rel="import" href="../iron-pages/iron-pages.html">
   <link rel="import" href="../paper-tabs/paper-tabs.html">
-  <link rel="import" href="../paper-dialog/paper-dialog.html">
   <link rel="import" href="../paper-button/paper-button.html">
+  <link rel="import" href="../paper-dialog/paper-dialog.html">
   <link rel="import" href="../paper-time-picker/paper-time-picker.html">
   <link rel="import" href="../paper-date-picker/paper-date-picker.html">
   <script src="../moment/min/moment-with-locales.min.js"></script>
@@ -248,6 +248,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 			var d = moment	
 						.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
 						.locale(this.locale);
+
+			if(!d.format)
+				return;
 
 			this.set("_previewDate", d.format(this.formatDate));
 			this.set("_previewTime", d.format(this.formatTime));
