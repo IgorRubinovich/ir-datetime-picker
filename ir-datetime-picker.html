@@ -49,7 +49,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 		<div>
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
-				<paper-tab hidden$="{{ onlyDate }}" target-page="time">{{ _previewTime }}</paper-tab>
+				<paper-tab hidden$="{{ onlyDate }}" target-page="time"><paper-input label="{{ _previewTime }}" on-change="setInputTime"></paper-input></paper-tab>
 			</iron-tabs>
 		</div>
 		<iron-pages on-tap="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
@@ -168,7 +168,15 @@ This code may only be used under the MIT license found at http://opensource.org/
 			if(this.onlyDate && this.onlyTime)
 				throw new Error("only-date and only-time can't be true simultaneously");				
 		},
-		
+
+		setInputTime : function(e) {
+			var time = e.currentTarget.value;
+			this.set("minute", time.substr(3, 4), this.$.timepicker);
+			this.set("hour", time.substr(0, 2), this.$.timepicker);
+			this.previewUpdate();
+			this.refitDialog();
+		},
+
 		open : function(ev)
 		{
 			var targetPage, pureDate = moment(this.date).hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
@@ -185,7 +193,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			
 			this.set("selectedPage", targetPage);
 			
-			this.previewUpdate()
+			this.previewUpdate();
 			
 			this.$.dialog.open();
 
