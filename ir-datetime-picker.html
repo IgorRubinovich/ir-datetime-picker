@@ -16,7 +16,7 @@ This code may only be used under the MIT license found at http://opensource.org/
   <link rel="import" href="../paper-time-picker/paper-time-picker.html">
   <link rel="import" href="../paper-date-picker/paper-date-picker.html">
   <script src="../moment/min/moment-with-locales.min.js"></script>
-  <style>
+  <style is="custom-style">
     :host {
       display: block;
     }
@@ -38,9 +38,26 @@ This code may only be used under the MIT license found at http://opensource.org/
 		display : flex;
 		flex-wrap : wrap;
 	}
-	
-	
-	
+
+	/* for some reason can't apply mixins in a cascading way so made two classes for now */
+	.tabHours
+	{
+		--paper-input-container-input :
+		{
+			font-size : 1.5em;
+			max-width : 2em;
+			text-align : right;
+		}
+	}		
+	.tabMinutes
+	{
+		--paper-input-container-input :
+		{
+			font-size : 1.5em;
+			max-width : 2em;
+		}
+	}
+
   </style>
   <template>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" on-tap="open" target-page="date">{{ _date }}</paper-button>
@@ -49,10 +66,13 @@ This code may only be used under the MIT license found at http://opensource.org/
 		<div>
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
-				<paper-tab hidden$="{{ onlyDate }}" target-page="time"><paper-input label="{{ _previewTime }}" on-change="setInputTime"></paper-input></paper-tab>
+				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
+					<paper-input class="tabHours" on-up="focusHere" size="2" value="{{ _previewHours }}" on-keyup="setInputTime"><span suffix>:</span></paper-input>
+					<paper-input class="tabMinutes" on-up="focusHere" size="2" value="{{ _previewMinutes }}" on-keyup="setInputTime"></paper-input>
+				</paper-tab>
 			</iron-tabs>
 		</div>
-		<iron-pages on-tap="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
+		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
 			<paper-date-picker hidden$="timeOnly" 
 				id="datepicker" 
 				page="date" 
@@ -149,6 +169,12 @@ This code may only be used under the MIT license found at http://opensource.org/
 			value : false
 		  },
 		  
+		  /* opened immediately */				
+		  opened : {
+			type : Boolean,
+			value : false
+		  },
+		  
 		  /* momentjs locale */
 		  locale : {
 			type : String,
@@ -170,11 +196,17 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 
 		setInputTime : function(e) {
-			var time = e.currentTarget.value;
-			this.set("minute", time.substr(3, 4), this.$.timepicker);
-			this.set("hour", time.substr(0, 2), this.$.timepicker);
+			if(/^\d+$/.test(this._previewHours))
+				this.$.timepicker.hour = this._previewHours;
+			
+			if(/^\d+$/.test(this._previewMinutes))
+				this.$.timepicker.minute = this._previewMinutes;
+			
 			this.previewUpdate();
-			this.refitDialog();
+		},
+		
+		focusHere : function(e) {
+			e.target.focus();
 		},
 
 		open : function(ev)
@@ -186,7 +218,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			this.set("minute", this.date.getMinutes(), this.$.timepicker);
 			this.set("hour", this.date.getHours(), this.$.timepicker);
 
-			targetPage = ev.currentTarget.getAttribute("target-page");
+			targetPage = ev ? ev.currentTarget.getAttribute("target-page") : "date";
 			
 			if(this.onlyTime) targetPage = "time";
 			if(this.onlyDate) targetPage = "date";
@@ -257,15 +289,25 @@ This code may only be used under the MIT license found at http://opensource.org/
 						.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
 						.locale(this.locale);
 
+				h = d.hours(),
+				m = d.minutes();
+
 			if(!d.format)
 				return;
 
 			this.set("_previewDate", d.format(this.formatDate));
 			this.set("_previewTime", d.format(this.formatTime));
+			
+			this.set("_previewHours", h < 10 ? "0" + h : h); // pad with zero
+			this.set("_previewMinutes", m < 10 ? "0" + m : m);
 		},
 		
 		attached : function() {
-			this.viewUpdate(); 
+			this.viewUpdate();
+			if(this.opened)
+				this.open();
+				
+			this.previewUpdate();
 		},
 		
 		_unixTimeChanged : function() {

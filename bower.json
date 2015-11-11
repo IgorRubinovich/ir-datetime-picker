@@ -45,6 +45,7 @@
     "font-roboto": "^1.0.1",
     "paper-ripple": "^1.0.0",
     "paper-button": "^1.0.0",
-    "paper-dialog": "^1.0.2"
+    "paper-dialog": "^1.0.2",
+    "moment": "^2.9.0"
   }
 }
