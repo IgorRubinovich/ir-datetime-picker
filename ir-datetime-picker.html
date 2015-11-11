@@ -57,6 +57,11 @@ This code may only be used under the MIT license found at http://opensource.org/
 			max-width : 2em;
 		}
 	}
+	
+	.tabDate {
+		font-size : 1.5em;
+		margin-top : 20px;
+	}
 
   </style>
   <template>
@@ -65,7 +70,7 @@ This code may only be used under the MIT license found at http://opensource.org/
     <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}">
 		<div>
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
-				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
+				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
 				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
 					<paper-input class="tabHours" on-up="focusHere" size="2" value="{{ _previewHours }}" on-keyup="setInputTime"><span suffix>:</span></paper-input>
 					<paper-input class="tabMinutes" on-up="focusHere" size="2" value="{{ _previewMinutes }}" on-keyup="setInputTime"></paper-input>
