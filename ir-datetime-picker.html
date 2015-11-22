@@ -72,8 +72,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
 				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
-					<paper-input class="tabHours" on-up="focusHere" size="2" value="{{ _previewHours }}" on-keyup="setInputTime"><span suffix>:</span></paper-input>
-					<paper-input class="tabMinutes" on-up="focusHere" size="2" value="{{ _previewMinutes }}" on-keyup="setInputTime"></paper-input>
+					<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
+					<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
 				</paper-tab>
 			</iron-tabs>
 		</div>
@@ -202,16 +202,37 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 		setInputTime : function(e) {
 			if(/^\d+$/.test(this._previewHours))
+			{
+				if(typeof this._previewHours == 'string')
+					this.set("_previewHours", this._previewHours.match(/\d\d?$/)[0]);
+
 				this.$.timepicker.hour = this._previewHours;
+			}
 			
 			if(/^\d+$/.test(this._previewMinutes))
+			{
+				if(typeof this._previewMinutes == 'string')
+					this.set("_previewMinutes", this._previewMinutes.match(/\d\d?$/)[0]);
+
 				this.$.timepicker.minute = this._previewMinutes;
+			}
+			 
+			
+			this.set('unixTime', Math.floor((this.unixTime / (24 * 60 * 60 * 1000))) * (this._previewHours * 24 * 60 * 60 + this._previewMinutes * 60 * 60) * 1000);
 			
 			this.previewUpdate();
 		},
 		
-		focusHere : function(e) {
-			e.target.focus();
+		switchAndFocus : function(e) {
+			if(this.selectedPage != 'time')
+				this.set('selectedPage', 'time');
+			
+			e.stopPropagation();
+		},
+		
+		preventTabEvent : function(e)
+		{
+			e.stopPropagation();
 		},
 
 		open : function(ev)
@@ -265,9 +286,10 @@ This code may only be used under the MIT license found at http://opensource.org/
 			this.value = this.prevValue;
 		},
 
+		// works for prompt and non-prompt modes
 		promptUpdate : function()
 		{
-			this.unixTime = Number(moment(this.$.datepicker.headingDate).format("x")) + this.$.timepicker.hour * 60 * 60 * 1000 + this.$.timepicker.minute * 60 * 1000;
+			this.unixTime = this.$.datepicker.date.getTime() + ((this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60)*1000;
 			this.date = new Date(this.unixTime);
 			
 			this.fire("change");
@@ -290,18 +312,20 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 		
 		previewUpdate : function() {
-			var d = moment	
-						.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
-						.locale(this.locale);
-
-				h = d.hours(),
-				m = d.minutes();
+			var h, m, previewTime,
+				d = moment.unix(this.$.datepicker.date.getTime()/1000 + (this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60);
+				
+				
+					//moment	
+					//	.unix(Number(moment(this.date).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
+			
+			h = d.hours(),
+			m = d.minutes();
 
 			if(!d.format)
 				return;
 
 			this.set("_previewDate", d.format(this.formatDate));
-			this.set("_previewTime", d.format(this.formatTime));
 			
 			this.set("_previewHours", h < 10 ? "0" + h : h); // pad with zero
 			this.set("_previewMinutes", m < 10 ? "0" + m : m);
