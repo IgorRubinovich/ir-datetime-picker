@@ -67,7 +67,7 @@ This code may only be used under the MIT license found at http://opensource.org/
   <template>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" on-tap="open" target-page="date">{{ _date }}</paper-button>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
-    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}">
+    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
 		<div>
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
@@ -200,6 +200,15 @@ This code may only be used under the MIT license found at http://opensource.org/
 				throw new Error("only-date and only-time can't be true simultaneously");				
 		},
 
+		okIfEnter : function(e) {
+			if(e.keyCode == 13)
+			{
+				this.close();
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		},
+		
 		setInputTime : function(e) {
 			if(/^\d+$/.test(this._previewHours))
 			{
@@ -233,6 +242,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 		preventTabEvent : function(e)
 		{
 			e.stopPropagation();
+			this.okIfEnter(e);
 		},
 
 		open : function(ev)
@@ -289,6 +299,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 		// works for prompt and non-prompt modes
 		promptUpdate : function()
 		{
+			//if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
+			//	return;
+				
 			this.unixTime = this.$.datepicker.date.getTime() + ((this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60)*1000;
 			this.date = new Date(this.unixTime);
 			
