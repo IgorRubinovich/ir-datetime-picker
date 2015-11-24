@@ -144,7 +144,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 		  
 		  unixTime : {
 			type : Number,
-			value : null,
+			value : 0,
 			notify : true,
 			observer : "_unixTimeChanged"
 		  },
@@ -325,8 +325,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 		
 		previewUpdate : function() {
-			if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
-				return;
+			//if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
+			//	return;
 				
 			var h, m, previewTime,
 				d = moment.unix(this.$.datepicker.date.getTime()/1000 + (this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60);
