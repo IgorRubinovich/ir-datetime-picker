@@ -16,7 +16,7 @@ This code may only be used under the MIT license found at http://opensource.org/
   <link rel="import" href="../paper-time-picker/paper-time-picker.html">
   <link rel="import" href="../paper-date-picker/paper-date-picker.html">
   <script src="../moment/min/moment-with-locales.min.js"></script>
-  <style is="custom-style">
+  <style>
     :host {
       display: block;
     }
@@ -38,46 +38,21 @@ This code may only be used under the MIT license found at http://opensource.org/
 		display : flex;
 		flex-wrap : wrap;
 	}
-
-	/* for some reason can't apply mixins in a cascading way so made two classes for now */
-	.tabHours
-	{
-		--paper-input-container-input :
-		{
-			font-size : 1.5em;
-			max-width : 2em;
-			text-align : right;
-		}
-	}		
-	.tabMinutes
-	{
-		--paper-input-container-input :
-		{
-			font-size : 1.5em;
-			max-width : 2em;
-		}
-	}
 	
-	.tabDate {
-		font-size : 1.5em;
-		margin-top : 20px;
-	}
-
+	
+	
   </style>
   <template>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" on-tap="open" target-page="date">{{ _date }}</paper-button>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
-    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
+    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}">
 		<div>
-			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
-				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
-				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
-					<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
-					<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
-				</paper-tab>
+			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
+				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
+				<paper-tab hidden$="{{ onlyDate }}" target-page="time">{{ _previewTime }}</paper-tab>
 			</iron-tabs>
 		</div>
-		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
+		<iron-pages on-tap="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
 			<paper-date-picker hidden$="timeOnly" 
 				id="datepicker" 
 				page="date" 
@@ -144,7 +119,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 		  
 		  unixTime : {
 			type : Number,
-			value : 0,
+			value : null,
 			notify : true,
 			observer : "_unixTimeChanged"
 		  },
@@ -174,20 +149,14 @@ This code may only be used under the MIT license found at http://opensource.org/
 			value : false
 		  },
 		  
-		  /* opened immediately */				
-		  opened : {
-			type : Boolean,
-			value : false
-		  },
-		  
 		  /* momentjs locale */
 		  locale : {
 			type : String,
 			value : "en"
 		  },
 		  
-		  _date : { type : Number, value : "pick date" },
-		  _hour : { type : Number, value : "pick time"  },
+		  _date : { type : Number},
+		  _hour : { type : Number},
 		  _minute :  { type : Number }
         },
 		
@@ -199,55 +168,10 @@ This code may only be used under the MIT license found at http://opensource.org/
 			if(this.onlyDate && this.onlyTime)
 				throw new Error("only-date and only-time can't be true simultaneously");				
 		},
-
-		okIfEnter : function(e) {
-			if(e.keyCode == 13)
-			{
-				this.close();
-				e.preventDefault();
-				e.stopPropagation();
-			}
-		},
 		
-		setInputTime : function(e) {
-			if(/^\d+$/.test(this._previewHours))
-			{
-				if(typeof this._previewHours == 'string')
-					this.set("_previewHours", this._previewHours.match(/\d\d?$/)[0]);
-
-				this.$.timepicker.hour = this._previewHours;
-			}
-			
-			if(/^\d+$/.test(this._previewMinutes))
-			{
-				if(typeof this._previewMinutes == 'string')
-					this.set("_previewMinutes", this._previewMinutes.match(/\d\d?$/)[0]);
-
-				this.$.timepicker.minute = this._previewMinutes;
-			}
-			 
-			
-			this.set('unixTime', Math.floor((this.unixTime / (24 * 60 * 60 * 1000))) * (this._previewHours * 24 * 60 * 60 + this._previewMinutes * 60 * 60) * 1000);
-			
-			this.previewUpdate();
-		},
-		
-		switchAndFocus : function(e) {
-			if(this.selectedPage != 'time')
-				this.set('selectedPage', 'time');
-			
-			e.target.select();
-			e.stopPropagation();
-		},
-		
-		preventTabEvent : function(e)
-		{
-			e.stopPropagation();
-			this.okIfEnter(e);
-		},
-
 		open : function(ev)
 		{
+			this.date = this.date == 'Invalid Date' ? new Date() : this.date;
 			var targetPage, pureDate = moment(this.date).hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
 
 			this.set("date", pureDate, this.$.datepicker);
@@ -255,14 +179,14 @@ This code may only be used under the MIT license found at http://opensource.org/
 			this.set("minute", this.date.getMinutes(), this.$.timepicker);
 			this.set("hour", this.date.getHours(), this.$.timepicker);
 
-			targetPage = ev ? ev.currentTarget.getAttribute("target-page") : "date";
+			targetPage = ev.currentTarget.getAttribute("target-page");
 			
 			if(this.onlyTime) targetPage = "time";
 			if(this.onlyDate) targetPage = "date";
 			
 			this.set("selectedPage", targetPage);
 			
-			this.previewUpdate();
+			this.previewUpdate()
 			
 			this.$.dialog.open();
 
@@ -297,13 +221,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 			this.value = this.prevValue;
 		},
 
-		// works for prompt and non-prompt modes
 		promptUpdate : function()
 		{
-			//if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
-			//	return;
-				
-			this.unixTime = this.$.datepicker.date.getTime() + ((this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60)*1000;
+			this.unixTime = Number(moment(this.$.datepicker.headingDate).format("x")) + this.$.timepicker.hour * 60 * 60 * 1000 + this.$.timepicker.minute * 60 * 1000;
 			this.date = new Date(this.unixTime);
 			
 			this.fire("change");
@@ -319,43 +239,39 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 		
 		viewUpdate : function() {
-			var d = moment.unix(this.date/1000).locale(this.locale);
+			var d = moment.unix(this.date/1000).locale(this.locale),
+					date,time;
 
-			this.set("_date", d.format(this.formatDate));
-			this.set("_time", d.format(this.formatTime));
+			if(this.date.getTime() == 1)
+			{
+				date = 'pick date';
+				time = 'pick time';
+				this.unixTime = '';
+			} else {
+				date = d.format(this.formatDate);
+				time = d.format(this.formatTime);
+			}
+
+
+			this.set("_date", date);
+			this.set("_time", time);
 		},
-		 
+		
 		previewUpdate : function() {
-			//if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
-			//	return;
-				
-			var h, m, previewTime,
-				d = moment.unix(this.$.datepicker.date.getTime()/1000 + (this.$.timepicker.hour)*60*60 + this.$.timepicker.minute*60);
-				
-				
-					//moment	
-					//	.unix(Number(moment(this.date).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
-			
-			h = d.hours(),
-			m = d.minutes();
+			var d = moment	
+						.unix(Number(moment(this.$.datepicker.headingDate).format("X")) + this.$.timepicker.hour * 60 * 60 + this.$.timepicker.minute * 60)
+						.locale(this.locale);
 
 			if(!d.format)
 				return;
 
 			this.set("_previewDate", d.format(this.formatDate));
-			
-			this.set("_previewHours", h < 10 ? "0" + h : h); // pad with zero
-			this.set("_previewMinutes", m < 10 ? "0" + m : m);
+			this.set("_previewTime", d.format(this.formatTime));
 		},
 		
 		attached : function() {
-			this.viewUpdate();
-			if(this.opened)
-				this.open();
-				
-			this.previewUpdate();
+			this.viewUpdate(); 
 		},
-		
 		_unixTimeChanged : function() {
 			this.date = new Date(this.unixTime);
 		}
