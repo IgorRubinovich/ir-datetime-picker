@@ -111,7 +111,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			notify : true
 		  },
 
-		  /* current date or undefined. Declared as object to make undefined possible */
+		  /* Selected date or undefined. Declared as object to make undefined possible. It is convenient to interpret a no-value (empty form value) as current server time. */
 		  date : {
 			type : Object,
 			notify : true,
@@ -248,11 +248,11 @@ This code may only be used under the MIT license found at http://opensource.org/
 			var m, relUnix;
 			//d = moment();
 			
-			relUnix = this.$.datepicker.date.getTime() + (24*60*60 + this.$.timepicker.hour*60*60 + this.$.timepicker.minute*60)*1000 // ms in timeZone as displayed			
-			m = moment(relUnix); // in timeZone as displayed			
-			this.unixTime =  (m.unix() - moment(0).utcOffset(this.timeZone).utcOffset() * 60) * 1000; // ms in utc
+			relUnix = this.$.datepicker.date.getTime() + (24*60*60 + (this.$.timepicker.hour + 1)*60*60 + this.$.timepicker.minute*60)*1000 // ms in utc
+			m = moment().utcOffset(0).set(relUnix); // moment object in utc
+			this.unixTime = relUnix
 			this.date = new Date(this.unixTime);
-			
+
 			this.value = this.unixTime;
 			
 			this.fire("change");
@@ -269,8 +269,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 		
 		/* update the actual control view (date and/or time buttons) visible in the page */
 		viewUpdate : function() {
-			var d = moment(this.date).utcOffset(this.timeZone).locale(this.locale),
-					date,time;
+			var d = moment().set(this.date).utcOffset(this.timeZone).locale(this.locale),
+					date, time;
 
 			if(typeof this.date == 'undefined' || this.date == null)
 			{
