@@ -268,30 +268,27 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 		/* Set time from tab text inputs */
 		setInputTime : function(e) {
-			var d, pureDateEpoch;
+			var d, pureDateEpoch, ph, pm;
 		
-			if(/^\d+$/.test(this._previewHours))
+			if(/\d\d?$/.test(this._previewHours.toString()))
 			{
-				if(typeof this._previewHours == 'string')
-					this.set("_previewHours", this._previewHours.match(/\d\d?$/)[0]);
-
+				this.set("_previewHours", Number(this._previewHours.toString().match(/\d\d?$/)[0] % 24).toString());
 				this.$.timepicker.hour = this._previewHours;
+				this._unixTime = this.inputsValueUtc('tab');
 			}
+			//else
+			//	this.set("_previewHours", this.$.timepicker.hour.toString())
 			
-			if(/^\d+$/.test(this._previewMinutes))
+			if(/\d\d?$/.test(this._previewMinutes.toString()))
 			{
-				if(typeof this._previewMinutes == 'string')
-					this.set("_previewMinutes", this._previewMinutes.match(/\d\d?$/)[0]);
-
+				this.set("_previewMinutes", Number(this._previewMinutes.toString().match(/\d\d?$/)[0] % 60).toString());
 				this.$.timepicker.minute = this._previewMinutes;
-			}
+				this._unixTime = this.inputsValueUtc('tab');
+			}			
+			//else
+			//	this.set("_previewHours", this.$.timepicker.minute.toString())
 			
-			//pureDateEpoch = moment(moment(this.$.datepicker.date.getTime())).hours(0).minutes(0).seconds(0).milliseconds(0).valueOf() + 60000*moment().utcOffset();
-			//pureDateEpoch + (this._previewHours*60*60+this._previewMinutes*60)*1000 - 60000*moment().utcOffset(this.timeZone).utcOffset();
-			
-			this._unixTime = this.inputsValueUtc('tab');
-
-			this.previewUpdate(true);
+			this.previewUpdate();
 		},
 
 		inputsValueUtc : function(timeInput)
