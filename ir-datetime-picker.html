@@ -1,4 +1,4 @@
-<!-- 
+<!--
 @license
 Copyright (c) 2015 Igor Rubinovich <igor.rubinovich@gmail.com>. All rights reserved.
 This code may only be used under the MIT license found at http://opensource.org/licenses/MIT
@@ -16,7 +16,7 @@ This code may only be used under the MIT license found at http://opensource.org/
   <link rel="import" href="../paper-time-picker/paper-time-picker.html">
   <link rel="import" href="../paper-date-picker/paper-date-picker.html">
   <script src="../moment/min/moment-with-locales.min.js"></script>
-  <style>
+  <style is="custom-style">
     :host {
       display: block;
     }
@@ -38,21 +38,46 @@ This code may only be used under the MIT license found at http://opensource.org/
 		display : flex;
 		flex-wrap : wrap;
 	}
+
+	/* for some reason can't apply mixins in a cascading way so made two classes for now */
+	.tabHours
+	{
+		--paper-input-container-input :
+		{
+			font-size : 1.5em;
+			max-width : 2em;
+			text-align : right;
+		}
+	}		
+	.tabMinutes
+	{
+		--paper-input-container-input :
+		{
+			font-size : 1.5em;
+			max-width : 2em;
+		}
+	}
 	
-	
-	
+	.tabDate {
+		font-size : 1.5em;
+		margin-top : 20px;
+	}
+
   </style>
   <template>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" on-tap="open" target-page="date">{{ _date }}</paper-button>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
-    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}">
+    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
 		<div>
-			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
-				<paper-tab hidden$="{{ onlyTime }}" target-page="date">{{ _previewDate }}</paper-tab>
-				<paper-tab hidden$="{{ onlyDate }}" target-page="time">{{ _previewTime }}</paper-tab>
+			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
+				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
+				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
+					<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
+					<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
+				</paper-tab>
 			</iron-tabs>
 		</div>
-		<iron-pages on-tap="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
+		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
 			<paper-date-picker hidden$="timeOnly" 
 				id="datepicker" 
 				page="date" 
@@ -214,41 +239,6 @@ This code may only be used under the MIT license found at http://opensource.org/
 			this.okIfEnter(e);
 		},
 
-		open : function(ev)
-		{
-			var d,
-				targetPage, 
-				pureDate;
-
-			d = !this.unixTime && this.unixTime !== 0 ? moment() : moment(this.unixTime);
-			
-			pureDate = d.hours(0).minutes(0).seconds(0).milliseconds(0).utcOffset(this.timeZone).toDate();
-
-			this.set("date", pureDate, this.$.datepicker);
-			
-			d = !this.unixTime && this.unixTime !== 0 ? moment() : moment(this.unixTime); // need this twice: for date and for time
-			d.utcOffset(this.timeZone);
-
-			this.set("minute", d.minutes(), this.$.timepicker);
-			this.set("hour", d.hours(), this.$.timepicker);
-			
-			targetPage = ev ? ev.currentTarget.getAttribute("target-page") : "date";
-			
-			if(this.onlyTime) targetPage = "time";
-			if(this.onlyDate) targetPage = "date";
-			
-			this.set("selectedPage", targetPage);
-			
-			this._unixTime = d.unix()*1000;
-			this.previewUpdate();
-			
-			this.$.dialog.open();
-			this.refitDialog();
-			
-			console.log("close with prague time: " + moment(this._unixDate).utcOffset(this.timeZone).toString())
-			console.log("close with utc    time: " + moment(this._unixDate).toString())
-		},
-
 		refitDialog : function() {
 			this.async(function() {
 				this.$.dialog.refit();
@@ -296,25 +286,87 @@ This code may only be used under the MIT license found at http://opensource.org/
 				this.$.timepicker.minute = this._previewMinutes;
 			}
 			
-			pureDateEpoch = moment(this.$.datepicker.date.getTime()).hours(0).minutes(0).seconds(0).milliseconds(0).toDate().getTime();
-
-			this._unixTime = pureDateEpoch + (this._previewHours*60*60+this._previewMinutes*60)*1000;
+			//pureDateEpoch = moment(moment(this.$.datepicker.date.getTime())).hours(0).minutes(0).seconds(0).milliseconds(0).valueOf() + 60000*moment().utcOffset();
+			//pureDateEpoch + (this._previewHours*60*60+this._previewMinutes*60)*1000 - 60000*moment().utcOffset(this.timeZone).utcOffset();
+			
+			this._unixTime = this.inputsValueUtc('tab');
 
 			this.previewUpdate(true);
+		},
+
+		inputsValueUtc : function(timeInput)
+		{
+			var pureDateEpoch, pureTimeEpoch, h, m;
+			
+			if(timeInput == 'picker')
+			{
+				h = this.$.timepicker.hour
+				m = this.$.timepicker.minute
+			}
+			else
+			if(timeInput == 'tab')
+			{
+				h = this._previewHours
+				m = this._previewMinutes
+			}
+				
+			pureTimeEpoch = (h*60*60+m*60)*1000 - 60000*moment().utcOffset(this.timeZone).utcOffset();
+			pureDateEpoch = moment(moment(this.$.datepicker.date.getTime())).hours(0).minutes(0).seconds(0).milliseconds(0).valueOf() + 60000*moment().utcOffset();
+
+			return pureDateEpoch + pureTimeEpoch;
+		},
+		
+		open : function(ev)
+		{
+			var d,
+				targetPage, 
+				pureDate;
+
+			d = moment().utcOffset(this.timeZone);
+			if(this.unixTime || this.unixTime === 0)
+				d = moment(this.unixTime - 60000*moment().utcOffset());
+			
+			pureDate = d.hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
+
+			this.set("date", pureDate, this.$.datepicker);
+			
+			d = moment().utcOffset(this.timeZone);
+			if(this.unixTime || this.unixTime === 0) // need this twice: for date and for time
+				d = moment(this.unixTime).utcOffset(this.timeZone);
+			
+
+			this.set("minute", d.minutes(), this.$.timepicker);
+			this.set("hour", d.hours(), this.$.timepicker);
+			
+			targetPage = ev ? ev.currentTarget.getAttribute("target-page") : "date";
+			
+			if(this.onlyTime) targetPage = "time";
+			if(this.onlyDate) targetPage = "date";
+			
+			this.set("selectedPage", targetPage);
+			
+			this._unixTime = d.unix()*1000;
+			this.previewUpdate();
+			
+			this.$.dialog.open();
+			this.refitDialog();
+			
+			console.log("close with prague time: " + moment(this._unixDate).utcOffset(this.timeZone).toString())
+			console.log("close with utc    time: " + moment(this._unixDate).toString())
 		},
 		
 		/* update values of dialog inputs */
 		previewUpdate : function(fromValue) {
 			var h, m, previewTime,
-				local,
+				pikers,
 				d;
 
-			local = this.$.datepicker.date.getTime() + (this.$.timepicker.hour*60*60 + this.$.timepicker.minute*60)*1000;
-			
-			d = moment(local);
+			if(!this.timeZone)
+				return;			
 
-			if(!d.isValid() || fromValue === true)
-				d = moment(this._unixTime);
+			d = moment(this.inputsValueUtc('picker')).utcOffset(this.timeZone);
+			if(!d || !d.isValid() || fromValue === true)
+				d = moment(this._unixTime).utcOffset(this.timeZone);
 
 			h = d.hours(),
 			m = d.minutes();
@@ -335,7 +387,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			//if(!(this.$.datepicker.date && this.$.timepicker.hour && this.$.timepicker.minute))
 			//	return;
 				
-			this.set('unixTime', this._unixTime - 60000 * moment().utcOffset(this.timeZone).utcOffset());
+			this.set('unixTime', this._unixTime);
 			this.set('value', this.unixTime);
 
 			//this.date = new Date(this._unixTime);
@@ -379,13 +431,14 @@ This code may only be used under the MIT license found at http://opensource.org/
 			if(this.opened)
 				this.open();
 				
-			//this.previewUpdate();
+			this.previewUpdate();
 		},
+		
 		_unixTimeChanged : function() {
 			if(this.unixTime != '')
 			{
 				this.unixTime = Number(this.unixTime);
-				this._unixTime = this.unixTime + 60000 * moment().utcOffset(this.timeZone || 0).utcOffset();
+				this._unixTime = this.unixTime;
 				this.set('value', this.unixTime);
 				//this.date = new Date(Number(this.unixTime)); //new Date(Number(this._unixTime)); //Date.UTC.apply(this, moment(0).toArray()); //new Date(this._unixTime);
 			}
