@@ -321,7 +321,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 			d = moment().utcOffset(this.timeZone);
 			if(this.unixTime || this.unixTime === 0)
-				d = moment(this.unixTime - 60000*moment().utcOffset());
+				d = moment(this.unixTime); // - 60000*moment().utcOffset()
 			
 			pureDate = d.hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
 
