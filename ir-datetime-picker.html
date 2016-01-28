@@ -347,9 +347,6 @@ This code may only be used under the MIT license found at http://opensource.org/
 			
 			this.$.dialog.open();
 			this.refitDialog();
-			
-			console.log("close with prague time: " + moment(this._unixDate).utcOffset(this.timeZone).toString())
-			console.log("close with utc    time: " + moment(this._unixDate).toString())
 		},
 		
 		/* update values of dialog inputs */
