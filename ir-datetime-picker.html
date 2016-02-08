@@ -69,15 +69,15 @@ This code may only be used under the MIT license found at http://opensource.org/
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
     <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
 		<div>
-			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page"">
+			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
 				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
 					<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
 					<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
 				</paper-tab>
-			</iron-tabs>
+			</paper-tabs>
 		</div>
-		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" attr-for-selected="page" selected="{{ selectedPage }}">
+		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
 			<paper-date-picker hidden$="timeOnly" 
 				id="datepicker" 
 				page="date" 
