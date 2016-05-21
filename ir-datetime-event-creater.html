@@ -1,0 +1,428 @@
+<!--
+@license
+Copyright (c) 2015 Igor Rubinovich <igor.rubinovich@gmail.com>. All rights reserved.
+This code may only be used under the MIT license found at http://opensource.org/licenses/MIT
+-->
+<!--
+# ir-datetime-picker
+# Tagging-style multiselect box for Polymer 1.0
+-->
+
+<dom-module is="ir-datetime-event-creater">
+    <link rel="import" href="../iron-pages/iron-pages.html">
+    <link rel="import" href="../paper-tabs/paper-tabs.html">
+    <link rel="import" href="../paper-button/paper-button.html">
+    <link rel="import" href="../paper-dialog/paper-dialog.html">
+    <link rel="import" href="../paper-time-picker/paper-time-picker.html">
+    <link rel="import" href="../paper-date-picker/paper-date-picker.html">
+    <link rel="import" href="ir-datetime-picker.html">
+    <script src="../moment/min/moment-with-locales.min.js"></script>
+    <style is="custom-style">
+        :host {
+            display: block;
+        };
+
+        paper-button{
+            padding: 10px 15px;
+            background-color: var(--paper-blue-500) !important;
+            margin-bottom: 10px;
+        }
+        paper-button[active]{
+            background-color: var(--paper-green-500) !important;
+        }
+
+
+    </style>
+    <template>
+        <div class="row">
+        <label for="">Recurring</label>
+        <paper-toggle-button  style="float: right;" id="isRecurring" name="isRecurring" checked={{moreday}}></paper-toggle-button>
+            <ir-native-input-reflector name="isRecurring" value-attr="checked" on-event="change"></ir-native-input-reflector>
+        </div>
+
+        <div class="row">
+            <label for="">Start Date and Time</label>
+            <div class="datepicker">
+                <ir-datetime-picker name="startDate" id="startDate" locale="ru" unix-time="{{startDate}}"  time-zone="{{timeZone}}"></ir-datetime-picker>
+                <ir-native-input-reflector name="startDate" value-attr="unixTime" on-event="change"></ir-native-input-reflector>
+            </div>
+        </div>
+
+        <div class="row">
+            <label for="">End Date and Time</label>
+            <div class="datepicker">
+                <ir-datetime-picker name="endDate" id="endDate" locale="ru" unix-time="{{endDate}}" time-zone="{{timeZone}}"></ir-datetime-picker>
+                <ir-native-input-reflector name="endDate" value-attr="unixTime" on-event="change"></ir-native-input-reflector>
+            </div>
+        </div>
+
+	<span id="invalidForm" hidden="{{itr}}">
+			<content>Invalid Time Range</content>
+	</span>
+
+
+
+        <div id="table" hidden="{{!moreday}}">
+           <div class="row">
+               <label> Choose open days:</label>
+               <div class="datepicker">
+                   <template is="dom-repeat" items="{{weekdays}}">
+                       <paper-button id="{{item.id}}" class="cwd" on-tap="chooseDays" raised toggles="true">{{item.name}}</paper-button>
+                   </template>
+               </div>
+           </div>
+
+
+            <div class=" inline">
+                <div class="col-6">
+                    <label>Start Time</label>
+                    <div class="datepicker">
+                        <ir-datetime-picker id="startTime"  locale="ru" unix-time="{{startTime}}" only-time  time-zone="{{timeZone}}" ></ir-datetime-picker>
+
+                    </div>
+                </div>
+                <div class="col-6">
+                    <label>End Time</label>
+                    <div class="datepicker">
+                        <ir-datetime-picker id="endTime" locale="ru" only-time unix-time="{{endTime}}" time-zone="{{timeZone}}"></ir-datetime-picker>
+                    </div>
+                </div>
+            </div>
+            <div class=" inline">
+                <div class="col-6">
+                    <label>Break Time Start</label>
+                    <div class="datepicker">
+                        <ir-datetime-picker id="startBreakTime" locale="ru" only-time  unix-time="{{startBreakTime}}" time-zone="{{timeZone}}"></ir-datetime-picker>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <label>Break Time End</label>
+                    <div class="datepicker">
+                        <ir-datetime-picker id="endBreakTime" locale="ru" only-time unix-time="{{endBreakTime}}" time-zone="{{timeZone}}" ></ir-datetime-picker>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <input name="openDays" hidden  type="text" placeholder="{{cwd2}}"   value="{{cwd2}}"/>
+        <ir-native-input-reflector name="openDays" value-attr="placeholder" on-event="change"></ir-native-input-reflector>
+
+        <input name="eventTimes" hidden  type="text"  value="[[et2]]"/>
+        <ir-native-input-reflector name="eventTimes" value-attr="value" on-event="change"></ir-native-input-reflector>
+
+    </template>
+
+    <script>
+        (function() {
+            Polymer({
+                is: 'ir-datetime-event-creater',
+
+                properties: {
+
+                    value1 : {
+                        type : String,
+                        observer : "_timeChanged",
+                        notify : true
+                    },
+                    startDate:{type:String, value : ''},
+                    endDate:{type:String, value : ''},
+                    startTime:{type:String, notify: true, value : ''},
+                    endTime:{type:String, notify: true, value : ''},
+                    startBreakTime:{type:String, notify: true, value : ''},
+                    endBreakTime:{type:String, notify: true, value : ''},
+                    pickers:{
+                        type:Array,
+                        notify : true,
+                        observer : "_pickersChanged"
+                    },
+                    itr:{type:Boolean, value: true},
+                    moreday:{type:Boolean, value: false, notify : true},
+                    content:{type:Array, value: 'Lorem'},
+                    weekdays:{type:Array, notify: true,  observer : "daysChanged"},
+                    cwd:{type:Array, value:[]},
+                    cwd2:{type:String,  value:"",   notify : true},
+                    ed:{type:Array,  value:[],   notify : true},
+                    ed2:{type:String,  value:"",   notify : true},
+                    et:{type:Array,  value:[]},
+                    et2:{type:String,  value:"",   notify : true},
+                    od:{type:Array,  value:[]},
+                    onlyDate : {
+                        type : Boolean,
+                        value : false
+                    },
+
+                    onlyTime : {
+                        type : Boolean,
+                        value : false
+                    },
+                    locale : {
+                        type : String,
+                        value : "en"
+                    },
+                    timeZone : { type : String, value : "+0:00" },
+                    /* current epoch time in utc */
+                    unixTime : {
+                        type : String,
+                        value : '',
+                        notify : true,
+                        observer : "_unixTimeChanged"
+                    }
+
+                },
+
+                observers : [
+                    'isRecurring(moreday)'
+                ],
+
+                eventTimes:function(){
+                    console.log('time added')
+                },
+
+                _unixTimeChanged:function(){
+                    console.log('_unixTimeChanged')
+                },
+                st:function(){
+
+                    console.log(this.startTime);
+                },
+
+                daysChanged:function(){
+                    var that =this;
+                    setTimeout(function(){
+                        var od = that.od;
+
+                        var days = document.getElementsByClassName('cwd');
+                        console.log(days);
+                        days = Array.prototype.filter.call(days, function(el) { return el != that });
+
+
+                        for (var i = 0; i < days.length; i++) {
+                            var o = od[i];
+                            var id= days[i].getAttribute('id');
+                            var a = od.indexOf(id);
+                            if(a>-1){
+                                days[i].setAttribute("active", true);
+                            }
+                        }
+                    }, 300);
+
+
+                },
+
+
+
+
+                attached : function() {
+
+                    this.set("_eventState", {});
+                    var that = this, pickers, form;
+
+                    function findUpTag(el, tag) {
+                        while (el.parentNode) {
+                            el = el.parentNode;
+                            if (el.tagName === tag)
+                                return el;
+                        }
+                        return null;
+                    }
+
+                    form = findUpTag(this, "FORM");
+                    if(form) {
+                        pickers = form.querySelectorAll('ir-datetime-picker');
+                        pickers = Array.prototype.filter.call(pickers, function(el) { return el != that });
+                        this.pickers = pickers;
+
+                    }
+
+                    var observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+//                            console.log(mutation);
+                            if(mutation.attributeName == 'value1'){
+                                that._timeChanged(mutation);
+                            }
+
+                        });
+                    });
+
+                    var config = { attributes: true, childList: true, characterData: true };
+
+                    pickers.forEach(function(el, i) {
+
+                        observer.observe(el.childNodes[1], config);
+                    });
+
+                    console.log('time zone:', this.timeZone);
+
+//                    var et = JSON.parse(this.et);
+
+
+
+//                    this.endTime = this.et[1];
+                    if(this.et[0]){
+                        this.set('startTime',this.et[0]);
+                    }
+                    if(this.et[1]){
+                        this.set('endTime',this.et[1]);
+                    }
+                    if(this.et[2]){
+                        this.set('startBreakTime',this.et[2]);
+                    }
+                    if(this.et[3]){
+                        this.set('endBreakTime',this.et[3]);
+                    }
+
+
+
+                    this.set('cwd',this.od);
+
+                    console.log('open days',this.od);
+
+
+
+
+
+
+
+
+
+                },
+                _pickersChanged:function(){
+                    console.log('pickerchanged');
+
+
+                },
+
+
+                isRecurring: function(){
+
+                    this.set('moreday', this.$.isRecurring.checked);
+                    var s = document.getElementById('startDate');
+                    var e = document.getElementById('endDate');
+                    if(this.moreday==true){
+
+                        s.setAttribute("only-date", true);
+                        e.setAttribute("only-date", true);
+                    }
+                    else{
+                        s.removeAttribute("only-date");
+                        e.removeAttribute("only-date");
+                    }
+
+                    this.set('onlyDate', false);
+                },
+
+                _timeChanged:function(mutation){
+                    var mutation = mutation;
+                    console.log(mutation);
+                    console.log(mutation.target.parentNode.id);
+                    var that = this;
+                    var v = this.pickers;
+
+                    var startDate = that.startDate;
+                    var endDate = that.endDate;
+                    var et = that.et;
+                    var ed = that.ed;
+                    var isBefore;
+                    var el = mutation.target.parentNode;
+
+
+                    if(el.id == 'startDate'){
+                        that.startDate = el._unixTime/1000;
+                        var day = moment.unix(el._unixTime);
+                    }
+                    else if(el.id == 'endDate'){
+                        that.endDate = el._unixTime/1000;
+                        var day2 = moment.unix(el._unixTime);
+                    }
+                    else if(el.id == 'startTime'){
+                        that.startTime = el._unixTime;
+                        that.et.push(el._unixTime);
+                    }
+                    else if(el.id == 'endTime'){
+                        that.endTime = el._unixTime;
+                        that.et.push(el._unixTime);
+                    }
+                    else if(el.id == 'startBreakTime'){
+                        that.startBreakTime = el._unixTime;
+                        that.et.push(el._unixTime);
+                    }
+                    else if(el.id == 'endBreakTime'){
+                        that.endBreakTime = el._unixTime;
+                        that.et.push(el._unixTime);
+                    }
+                    that.et =[that.startTime, that.endTime, that.startBreakTime, that.endBreakTime ];
+
+
+                    if(that.startDate && that.endDate){
+                        isBefore = moment(that.startDate).isBefore(that.endDate);
+                        if(!isBefore){
+                            this.set("itr", false);
+                        }
+                        else{
+                            this.set("itr", true);
+                            var duration = moment.duration(that.endDate*1000 - that.startDate*1000).asDays();
+                            var startDayName = moment(startDate*1000)._d.getDay();
+
+                            if(duration>1){
+                                this.openDays(duration,startDayName,startDate*1000 );
+                            }
+                        }
+                    }
+
+
+
+                    that.et2 = JSON.stringify(that.et);
+                    that.set('et2', that.et2 );
+                    console.log(that.et2);
+                },
+
+
+
+                openDays: function(d,s,x){
+                    moment.locale(this.locale);
+                    var days =[];
+                    var h = moment().weekday(s);
+                    var l = moment(x).format('dddd');
+
+                    var text = 'duration: '+d+',   start day: '+l;
+                    this.set("content", text);
+
+                    if(d>=7){
+                        for (let i = 0; i < 7; i++) {
+                            let k = moment(x).add(i, 'd').format('dddd');
+                            let b = {'name':k, 'id':i};
+                            days.push(b);
+                        }
+                    }
+                    else{
+                        for (let i = 0; i < d; i++) {
+                            let k = moment(x).add(i, 'd').format('dddd');
+                            let b = {'name':k, 'id':i};
+                            days.push(b);
+                        }
+                    }
+                    this.set("weekdays", days);
+
+                },
+
+                chooseDays : function(e){
+                    var that = this;
+                    var k = that.cwd;
+                    var id = e.target.id;
+                    var z = k.indexOf(id);
+                    if(z<0){k.push(id);}
+                    else{k.splice(id);}
+
+                    that.cwd2 = JSON.stringify(k);
+                    that.set('cwd2', that.cwd2);
+                    console.log(that.cwd2);
+
+                }
+
+            });
+        })();
+    </script>
+
+</dom-module>
