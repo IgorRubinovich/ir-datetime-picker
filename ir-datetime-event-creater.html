@@ -329,11 +329,11 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 
                     if(el.id == 'startDate'){
-                        that.startDate = el._unixTime/1000;
+                        that.startDate = el._unixTime;
                         var day = moment.unix(el._unixTime);
                     }
                     else if(el.id == 'endDate'){
-                        that.endDate = el._unixTime/1000;
+                        that.endDate = el._unixTime;
                         var day2 = moment.unix(el._unixTime);
                     }
                     else if(el.id == 'startTime'){
