@@ -65,7 +65,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 
   </style>
   <template>
-    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" id="date1" value1$="{{_date}}" on-tap="open" target-page="date">{{ _date }}</paper-button>
+    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" id="date1" on-tap="open" target-page="date">{{ _date }}</paper-button>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
     <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
 		<div>
@@ -113,6 +113,10 @@ This code may only be used under the MIT license found at http://opensource.org/
 		Polymer({
 			is: 'ir-datetime-picker',
 
+			behaviors: [
+				Polymer.IronFormElementBehavior
+			],
+			
 			properties: {
 				/* paper-date-picker properties */
 				minYear : { type : Number },
@@ -202,7 +206,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 				_minute :  { type : Number },
 
 				messagePickTime : { type : String, value : "pick time" },
-                    value1:{type : Number, value : "pick event"}
+				value : { type : Number }
 			},
 
 		observers : [
@@ -320,9 +324,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 				targetPage,
 				pureDate;
 
-			d = moment().utcOffset(this.timeZone);
-			if(this.unixTime || this.unixTime === 0)
-				d = moment(this.unixTime); // - 60000*moment().utcOffset()
+			d = (this.unixTime || this.unixTime === 0) ? 
+				moment(this.unixTime).utcOffset(this.timeZone) : // - 60000*moment().utcOffset()
+				moment().utcOffset(this.timeZone);
 
 			pureDate = d.hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
 
@@ -431,7 +435,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 		_unixTimeChanged : function() {
 
-			if(this.unixTime != '')
+			if(typeof this.unixTime != 'undefined' && this.unixTime != null)
 			{
 				this.unixTime = Number(this.unixTime);
 				this._unixTime = this.unixTime;
