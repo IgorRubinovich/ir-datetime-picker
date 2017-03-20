@@ -206,7 +206,10 @@ This code may only be used under the MIT license found at http://opensource.org/
 				_minute :  { type : Number },
 
 				messagePickTime : { type : String, value : "pick time" },
-				value : { type : Number }
+				value : { type : String, value : '' },
+				
+				// will display current time by default but not value until user clicks ok
+				//displayNowByDefault : { value : true, type : Boolean }
 			},
 
 		observers : [
@@ -434,8 +437,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 		},
 
 		_unixTimeChanged : function() {
-
-			if(typeof this.unixTime != 'undefined' && this.unixTime != null)
+			if(parseInt(this.unixTime) == this.unixTime)
 			{
 				this.unixTime = Number(this.unixTime);
 				this._unixTime = this.unixTime;
