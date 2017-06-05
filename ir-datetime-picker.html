@@ -62,6 +62,11 @@ This code may only be used under the MIT license found at http://opensource.org/
 		font-size : 1.5em;
 		margin-top : 20px;
 	}
+	
+	#quickYearInput {
+		width : 4em;
+		text-align : center;
+	}
 
   </style>
   <template>
@@ -77,30 +82,37 @@ This code may only be used under the MIT license found at http://opensource.org/
 				</paper-tab>
 			</paper-tabs>
 		</div>
-		<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
-			<paper-date-picker hidden$="timeOnly"
-				id="datepicker"
-				page="date"
-				responsive-width="{{ responsiveWidth }}"
-				prompt-dialog-source
-				min-year="{{minYear}}"
-				max-year="{{maxYear}}"
-				years="{{years}}"
-				min-date="{{minDate}}"
-				max-date="{{maxDate}}"
-				on-date-changed="previewUpdate"
-				hidden$="{{ onlyTime }}"
-				>
-			</paper-date-picker>
-			<paper-time-picker
-				id="timepicker"
-				class="paper-time-picker-dialog"
-				page="time"
-				responsive-width="{{ responsiveWidth }}"
-				hidden$="{{ onlyDate }}"
-				></paper-time-picker>
-			</paper-time-picker>
-		</iron-pages>
+		<div>
+			<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px">
+				<paper-icon-button icon="chevron-left" on-down="yearLess"></paper-icon-button>
+					<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" no-label-float></paper-input>
+				<paper-icon-button icon="chevron-right" on-down="yearMore"></paper-icon-button>
+			</div>
+			<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
+				<paper-date-picker
+					id="datepicker"
+					page="date"
+					responsive-width="{{ responsiveWidth }}"
+					prompt-dialog-source
+					min-year="{{minYear}}"
+					max-year="{{maxYear}}"
+					years="{{years}}"
+					min-date="{{minDate}}"
+					max-date="{{maxDate}}"
+					on-date-changed="previewUpdate"
+					hidden$="{{ onlyTime }}"
+					>
+				</paper-date-picker>
+				<paper-time-picker
+					id="timepicker"
+					class="paper-time-picker-dialog"
+					page="time"
+					responsive-width="{{ responsiveWidth }}"
+					hidden$="{{ onlyDate }}"
+					></paper-time-picker>
+				</paper-time-picker>
+			</iron-pages>
+		</div>
 	  <div class="buttons">
 		<paper-button dialog-dismiss on-tap="cancel">Cancel</paper-button>
 		<paper-button dialog-confirm on-tap="promptUpdate">OK</paper-button>
@@ -122,6 +134,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 				minYear : { type : Number },
 				maxYear : { type : Number },
 				years : { type : Number },
+				year : { type : Number, computed : "_year(unixTime,_unixTime)" },
 				minDate : { type : Number },
 				maxDate : { type : Number },
 
@@ -206,6 +219,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 				_minute :  { type : Number },
 
 				messagePickTime : { type : String, value : "pick time" },
+				messageYearPaging : { type : String, value : "year" },
 				value : { type : String, value : '' },
 				
 				// will display current time by default but not value until user clicks ok
@@ -218,7 +232,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 		_onlyChanged : function() {
 			if(this.onlyDate && this.onlyTime)
-				throw new Error("only-date and only-time can't be true simultaneously");
+				throw new Error("only-date and only-time can't both be true");
 		},
 
 		okIfEnter : function(e) {
@@ -445,13 +459,37 @@ This code may only be used under the MIT license found at http://opensource.org/
 				//this.date = new Date(Number(this.unixTime)); //new Date(Number(this._unixTime)); //Date.UTC.apply(this, moment(0).toArray()); //new Date(this._unixTime);
 			}
             this.viewUpdate();
-
 		},
 
 		_valueChanged : function(oldv, newv) {
-			console.log(oldv, newv);
-		}
-
+			//console.log(oldv, newv);
+		},
+		
+		yearAdd : function(n) {
+			this.$.datepicker.date = moment(this.$.datepicker.date).add(n, "year").toDate();
+			
+			//this.viewUpdate();
+		},
+		
+		yearLess : function(n) {
+			this.yearAdd(-1);
+		},
+		
+		yearMore : function(n) {
+			this.yearAdd(1);
+		},
+		
+		_year : function() {
+			return moment(this.$.datepicker.date).year()
+		},
+		
+		quickChangeYear : function() {
+			this.$.datepicker.date = moment(this.$.datepicker.date).year(this.$.quickYearInput.value).toDate();
+		},
+		
+		eq : function(a,b) {
+			return a == b;
+		}		
       });
     })();
   </script>
