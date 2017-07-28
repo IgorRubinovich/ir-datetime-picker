@@ -18,8 +18,15 @@ This code may only be used under the MIT license found at http://opensource.org/
   <script src="../moment/min/moment-with-locales.min.js"></script>
   <style is="custom-style">
     :host {
-      display: block;
-    }
+		display: block;
+		--paper-calendar {
+			max-width : 400px;
+		}
+		--paper-dialog {
+			margin-left : 0;
+		}
+	}	
+	
 
     @media (max-width: 600px) {
       h1.paper-font-display1 {
@@ -27,18 +34,28 @@ This code may only be used under the MIT license found at http://opensource.org/
       }
     }
 
-	paper-dialog-scrollable paper-button, #non-prompt-opener {
-	}
-
 	#non-prompt-opener {
 		border : 1px solid #ddd;
 	}
-
-	paper-dialog-scrollable {
-		display : flex;
-		flex-wrap : wrap;
+	paper-dialog {
+		margin : 0;
+		max-height : 100vh;
 	}
-
+    @media (max-width: 600px) {
+		paper-dialog div {
+			padding : 0;
+			margin : 0;
+		}
+	}
+	
+	paper-dialog {
+		padding : 0;
+	}
+	
+	paper-dialog > div {
+		margin : 0;
+	}
+	
 	/* for some reason can't apply mixins in a cascading way so made two classes for now */
 	.tabHours
 	{
@@ -57,6 +74,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 			max-width : 2em;
 		}
 	}
+	.buttons {
+		height : 50px;
+	}
 
 	.tabDate {
 		font-size : 1.5em;
@@ -67,12 +87,16 @@ This code may only be used under the MIT license found at http://opensource.org/
 		width : 4em;
 		text-align : center;
 	}
+	
+	paper-date-picker {
+		max-width : 100%;
+	}
 
   </style>
   <template>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" id="date1" on-tap="open" target-page="date">{{ _date }}</paper-button>
     <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
-    <paper-dialog id="dialog" responsive-width="{{ responsiveWidth }}" on-keydown="okIfEnter">
+    <paper-dialog id="dialog" responsive-width="[[ responsiveWidth ]]" on-keydown="okIfEnter">
 		<div>
 			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
 				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
@@ -85,14 +109,14 @@ This code may only be used under the MIT license found at http://opensource.org/
 		<div>
 			<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px">
 				<paper-icon-button icon="chevron-left" on-down="yearLess"></paper-icon-button>
-					<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" no-label-float></paper-input>
+					<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" on-blur="refitDialog" no-label-float></paper-input>
 				<paper-icon-button icon="chevron-right" on-down="yearMore"></paper-icon-button>
 			</div>
 			<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
 				<paper-date-picker
 					id="datepicker"
 					page="date"
-					responsive-width="{{ responsiveWidth }}"
+					responsive-width="[[ responsiveWidth ]]"
 					prompt-dialog-source
 					min-year="{{minYear}}"
 					max-year="{{maxYear}}"
@@ -107,7 +131,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 					id="timepicker"
 					class="paper-time-picker-dialog"
 					page="time"
-					responsive-width="{{ responsiveWidth }}"
+					responsive-width="[[ responsiveWidth ]]"
 					hidden$="{{ onlyDate }}"
 					></paper-time-picker>
 				</paper-time-picker>
@@ -139,7 +163,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 				maxDate : { type : Number },
 
 				/* paper-date-picker and paper-time-picker layout width */
-				responsiveWidth : { type : Number },
+				responsiveWidth : { type : String, value : "500px" },
 
 				promptMode : {
 					type : Boolean,
@@ -485,6 +509,12 @@ This code may only be used under the MIT license found at http://opensource.org/
 		
 		quickChangeYear : function() {
 			this.$.datepicker.date = moment(this.$.datepicker.date).year(this.$.quickYearInput.value).toDate();
+		},
+		
+		refitDialog : function() {
+			this.debounce("refit", function() {
+				this.$.dialog.refit();
+			}, 50);
 		},
 		
 		eq : function(a,b) {
