@@ -482,6 +482,9 @@ This code may only be used under the MIT license found at http://opensource.org/
 				this.set('value', this.unixTime);
 				//this.date = new Date(Number(this.unixTime)); //new Date(Number(this._unixTime)); //Date.UTC.apply(this, moment(0).toArray()); //new Date(this._unixTime);
 			}
+			else
+			if(!this.unixTime)
+				this.set('value', '');
             this.viewUpdate();
 		},
 
