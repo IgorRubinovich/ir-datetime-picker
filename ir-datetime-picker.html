@@ -16,7 +16,7 @@ This code may only be used under the MIT license found at http://opensource.org/
   <link rel="import" href="../paper-time-picker/paper-time-picker.html">
   <link rel="import" href="../paper-date-picker/paper-date-picker.html">
   <script src="../moment/min/moment-with-locales.min.js"></script>
-  <style is="custom-style">
+  <style>
     :host {
 		display: block;
 		--paper-calendar {
@@ -59,9 +59,11 @@ This code may only be used under the MIT license found at http://opensource.org/
 	/* for some reason can't apply mixins in a cascading way so made two classes for now */
 	.tabHours
 	{
+		text-align : right;
+		
 		--paper-input-container-input :
 		{
-			font-size : 1.5em;
+			font-size : 1.1em;
 			max-width : 2em;
 			text-align : right;
 		}
@@ -70,7 +72,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 	{
 		--paper-input-container-input :
 		{
-			font-size : 1.5em;
+			font-size : 1.1em;
 			max-width : 2em;
 		}
 	}
@@ -79,7 +81,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 	}
 
 	.tabDate {
-		font-size : 1.5em;
+		font-size : 1.1em;
 		margin-top : 20px;
 	}
 	
@@ -107,7 +109,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			</paper-tabs>
 		</div>
 		<div>
-			<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px">
+			<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px; text-align : center">
 				<paper-icon-button icon="chevron-left" on-down="yearLess"></paper-icon-button>
 					<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" on-blur="refitDialog" no-label-float></paper-input>
 				<paper-icon-button icon="chevron-right" on-down="yearMore"></paper-icon-button>
@@ -369,7 +371,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 				moment(this.unixTime).utcOffset(this.timeZone) : // - 60000*moment().utcOffset()
 				moment().utcOffset(this.timeZone);
 
-			pureDate = d.hours(0).minutes(0).seconds(0).milliseconds(0).toDate();
+			pureDate = moment({ year : d.year(), month : d.month(), date : d.date() }).toDate();
 
 			this.set("date", pureDate, this.$.datepicker);
 
