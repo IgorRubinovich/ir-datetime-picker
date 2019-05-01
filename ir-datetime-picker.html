@@ -8,146 +8,147 @@ This code may only be used under the MIT license found at http://opensource.org/
 # Tagging-style multiselect box for Polymer 1.0
 -->
 
+<link rel="import" href="../iron-pages/iron-pages.html">
+<link rel="import" href="../paper-tabs/paper-tabs.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-time-picker/paper-time-picker.html">
+<link rel="import" href="../paper-date-picker/paper-date-picker.html">
+<script src="../moment/min/moment-with-locales.min.js"></script>
+
 <dom-module id="ir-datetime-picker">
-  <link rel="import" href="../iron-pages/iron-pages.html">
-  <link rel="import" href="../paper-tabs/paper-tabs.html">
-  <link rel="import" href="../paper-button/paper-button.html">
-  <link rel="import" href="../paper-dialog/paper-dialog.html">
-  <link rel="import" href="../paper-time-picker/paper-time-picker.html">
-  <link rel="import" href="../paper-date-picker/paper-date-picker.html">
-  <script src="../moment/min/moment-with-locales.min.js"></script>
-  <style>
-    :host {
-		display: block;
-		--paper-calendar {
-			max-width : 400px;
-		}
-		--paper-dialog {
-			margin-left : 0;
-		}
-	}	
-	
+	<template>
+		<style>
+			:host {
+			display: block;
+			--paper-calendar {
+				max-width : 400px;
+			}
+			--paper-dialog {
+				margin-left : 0;
+			}
+		}	
+		
 
-    @media (max-width: 600px) {
-      h1.paper-font-display1 {
-        font-size: 24px;
-      }
-    }
+			@media (max-width: 600px) {
+				h1.paper-font-display1 {
+					font-size: 24px;
+				}
+			}
 
-	#non-prompt-opener {
-		border : 1px solid #ddd;
-	}
-	paper-dialog {
-		margin : 0;
-		max-height : 100vh;
-	}
-    @media (max-width: 600px) {
-		paper-dialog div {
+		#non-prompt-opener {
+			border : 1px solid #ddd;
+		}
+		paper-dialog {
+			margin : 0;
+			max-height : 100vh;
+		}
+			@media (max-width: 600px) {
+			paper-dialog div {
+				padding : 0;
+				margin : 0;
+			}
+		}
+		
+		paper-dialog {
 			padding : 0;
+		}
+		
+		paper-dialog > div {
 			margin : 0;
 		}
-	}
-	
-	paper-dialog {
-		padding : 0;
-	}
-	
-	paper-dialog > div {
-		margin : 0;
-	}
-	
-	/* for some reason can't apply mixins in a cascading way so made two classes for now */
-	.tabHours
-	{
-		text-align : right;
 		
-		--paper-input-container-input :
+		/* for some reason can't apply mixins in a cascading way so made two classes for now */
+		.tabHours
 		{
-			font-size : 1.1em;
-			max-width : 2em;
 			text-align : right;
+			
+			--paper-input-container-input :
+			{
+				font-size : 1.1em;
+				max-width : 2em;
+				text-align : right;
+			}
 		}
-	}
-	.tabMinutes
-	{
-		--paper-input-container-input :
+		.tabMinutes
 		{
-			font-size : 1.1em;
-			max-width : 2em;
+			--paper-input-container-input :
+			{
+				font-size : 1.1em;
+				max-width : 2em;
+			}
 		}
-	}
-	.buttons {
-		height : 50px;
-	}
+		.buttons {
+			height : 50px;
+		}
 
-	.tabDate {
-		font-size : 1.1em;
-		margin-top : 20px;
-	}
-	
-	#quickYearInput {
-		width : 4em;
-		text-align : center;
-	}
-	
-	paper-date-picker {
-		max-width : 100%;
-	}
+		.tabDate {
+			font-size : 1.1em;
+			margin-top : 20px;
+		}
+		
+		#quickYearInput {
+			width : 4em;
+			text-align : center;
+		}
+		
+		paper-date-picker {
+			max-width : 100%;
+		}
 
-  </style>
-  <template>
-    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" id="date1" on-tap="open" target-page="date">{{ _date }}</paper-button>
-    <paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
-    <paper-dialog id="dialog" responsive-width="[[ responsiveWidth ]]" on-keydown="okIfEnter">
-		<div>
-			<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
-				<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
-				<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
-					<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
-					<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
-				</paper-tab>
-			</paper-tabs>
-		</div>
-		<div>
-			<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px; text-align : center">
-				<paper-icon-button icon="chevron-left" on-down="yearLess"></paper-icon-button>
-					<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" on-blur="refitDialog" no-label-float></paper-input>
-				<paper-icon-button icon="chevron-right" on-down="yearMore"></paper-icon-button>
+		</style>
+		<paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyTime }}" id="date1" on-tap="open" target-page="date">{{ _date }}</paper-button>
+		<paper-button raised$="{{ !readOnly }}" disabled$="{{ readOnly }}" hidden$="{{ onlyDate }}" hidden$="{{ onlyDate }}" on-tap="open" target-page="time"><span>{{ _time }}</span></paper-button>
+		<paper-dialog id="dialog" responsive-width="[[ responsiveWidth ]]" on-keydown="okIfEnter">
+			<div>
+				<paper-tabs on-selected-changed="refitDialog" selected="{{ selectedPage }}" attr-for-selected="target-page">
+					<paper-tab hidden$="{{ onlyTime }}" target-page="date"><span class="tabDate">{{ _previewDate }}</span></paper-tab>
+					<paper-tab class="" hidden$="{{ onlyDate }}" target-page="time">
+						<paper-input class="tabHours" size="3" value="{{ _previewHours }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"><span suffix>:</span></paper-input>
+						<paper-input class="tabMinutes" size="3" value="{{ _previewMinutes }}" on-click="switchAndFocus" on-keydown="preventTabEvent" on-keyup="setInputTime"></paper-input>
+					</paper-tab>
+				</paper-tabs>
 			</div>
-			<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
-				<paper-date-picker
-					id="datepicker"
-					page="date"
-					responsive-width="[[ responsiveWidth ]]"
-					prompt-dialog-source
-					min-year="{{minYear}}"
-					max-year="{{maxYear}}"
-					years="{{years}}"
-					min-date="{{minDate}}"
-					max-date="{{maxDate}}"
-					on-date-changed="previewUpdate"
-					hidden$="{{ onlyTime }}"
-					>
-				</paper-date-picker>
-				<paper-time-picker
-					id="timepicker"
-					class="paper-time-picker-dialog"
-					page="time"
-					responsive-width="[[ responsiveWidth ]]"
-					hidden$="{{ onlyDate }}"
-					></paper-time-picker>
-				</paper-time-picker>
-			</iron-pages>
-		</div>
-	  <div class="buttons">
-		<paper-button dialog-dismiss on-tap="cancel">Cancel</paper-button>
-		<paper-button dialog-confirm on-tap="promptUpdate">OK</paper-button>
-	  </div>
-	</paper-dialog>
-  </template>
+			<div>
+				<div hidden='[[ eq(selectedPage, "time") ]]' class="layout horizontal end-justified center" style="margin-right : 14px; text-align : center">
+					<paper-icon-button icon="chevron-left" on-down="yearLess"></paper-icon-button>
+						<paper-input id="quickYearInput" value="[[ year ]]" on-keyup="quickChangeYear" on-blur="refitDialog" no-label-float></paper-input>
+					<paper-icon-button icon="chevron-right" on-down="yearMore"></paper-icon-button>
+				</div>
+				<iron-pages on-tap="previewUpdate" on-up="previewUpdate" style="width: inherit;" attr-for-selected="page" selected="{{ selectedPage }}">
+					<paper-date-picker
+						id="datepicker"
+						page="date"
+						responsive-width="[[ responsiveWidth ]]"
+						prompt-dialog-source
+						min-year="{{minYear}}"
+						max-year="{{maxYear}}"
+						years="{{years}}"
+						min-date="{{minDate}}"
+						max-date="{{maxDate}}"
+						on-date-changed="previewUpdate"
+						hidden$="{{ onlyTime }}"
+						>
+					</paper-date-picker>
+					<paper-time-picker
+						id="timepicker"
+						class="paper-time-picker-dialog"
+						page="time"
+						responsive-width="[[ responsiveWidth ]]"
+						hidden$="{{ onlyDate }}"
+						></paper-time-picker>
+					</paper-time-picker>
+				</iron-pages>
+			</div>
+			<div class="buttons">
+				<paper-button dialog-dismiss on-tap="cancel">Cancel</paper-button>
+				<paper-button dialog-confirm on-tap="promptUpdate">OK</paper-button>
+			</div>
+		</paper-dialog>
+	</template>
 
-  <script>
-    (function() {
+	<script>
+		(function() {
 		Polymer({
 			is: 'ir-datetime-picker',
 
@@ -235,14 +236,21 @@ This code may only be used under the MIT license found at http://opensource.org/
 					observer : "_unixTimeChanged"
 				},
 
+				/* current epoch time in utc */
+				defaultUnixTime : {
+					type : String,
+					value : '',
+					notify : true
+				},
+
 
 				/* the actual display date */
 				_date : { type : Number, value : "pick date" },
 				messagePickDate : { type : String, value : "pick date" },
 
 				/* preview display time */
-				_hour : { type : Number, value : "pick time"  },
-				_minute :  { type : Number },
+				_hour : { type : Number, value : "pick time"	},
+				_minute :	{ type : Number },
 
 				messagePickTime : { type : String, value : "pick time" },
 				messageYearPaging : { type : String, value : "year" },
@@ -369,7 +377,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 
 			d = (this.unixTime || this.unixTime === 0) ? 
 				moment(this.unixTime).utcOffset(this.timeZone) : // - 60000*moment().utcOffset()
-				moment().utcOffset(this.timeZone);
+				moment(parseInt(this.defaultUnixTime)).utcOffset(this.timeZone);
 
 			pureDate = moment({ year : d.year(), month : d.month(), date : d.date() }).toDate();
 
@@ -445,8 +453,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 				this.inPromptMode = false;
 			}
 
-			console.log("close with prague time: " + moment(this._unixDate).utcOffset(this.timeZone).toString())
-			console.log("close with utc    time: " + moment(this._unixDate).toString())
+			// console.log("close with Prague time: " + moment(this._unixDate).utcOffset(this.timeZone).toString())
+			// console.log("close with utc	time: " + moment(this._unixDate).toString())
 		},
 
 		/* update the actual control view (date and/or time buttons) visible in the page */
@@ -487,7 +495,7 @@ This code may only be used under the MIT license found at http://opensource.org/
 			else
 			if(!this.unixTime)
 				this.set('value', '');
-            this.viewUpdate();
+						this.viewUpdate();
 		},
 
 		_valueChanged : function(oldv, newv) {
@@ -525,8 +533,8 @@ This code may only be used under the MIT license found at http://opensource.org/
 		eq : function(a,b) {
 			return a == b;
 		}		
-      });
-    })();
-  </script>
+			});
+		})();
+	</script>
 
 </dom-module>
