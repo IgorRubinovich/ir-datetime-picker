@@ -4,7 +4,7 @@
 
 ## Features
 - Select either date, time or both
-- Use moment.js locales
+- Use moment.js locales (must be preloaded by client)
 - Responsive
 
 ## Quick usage examples
